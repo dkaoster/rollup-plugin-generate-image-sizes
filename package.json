@@ -1,0 +1,32 @@
+{
+  "name": "rollup-generate-image-sizes",
+  "version": "0.0.0",
+  "description": "Automatically generate image sizes for use in srcsets.",
+  "main": "dist/rollup-generate-image-sizes.cjs.js",
+  "jsnext:main": "dist/rollup-generate-image-sizes.es.js",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "npm run clean && npm run build:cjs && npm run build:es",
+    "build:cjs": "rollup -c -o dist/rollup-generate-image-sizes.cjs.js -f cjs",
+    "build:es": "rollup -c -o dist/rollup-generate-image-sizes.es.js -f es",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dkaoster/rollup-generate-image-sizes.git"
+  },
+  "author": "Daniel Kao",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dkaoster/rollup-generate-image-sizes/issues"
+  },
+  "homepage": "https://github.com/dkaoster/rollup-generate-image-sizes#readme",
+  "dependencies": {
+    "globby": "^11.0.1",
+    "sharp": "^0.26.3"
+  },
+  "devDependencies": {
+    "rimraf": "^3.0.2",
+    "rollup": "^2.33.3"
+  }
+}
