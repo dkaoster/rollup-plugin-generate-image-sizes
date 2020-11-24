@@ -1,12 +1,7 @@
 name: Bump Package Version
 
 on:
-  workflow_dispatch:
-    inputs:
-      version-type:
-        default: patch
-        description: Bumps the package version based on value (e.g. patch)
-        required: true
+  create: tags
 
 jobs:
   update-deps:
@@ -15,8 +10,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: neverendingqs/gh-action-node-bump-version-pr@v1.0.0
+      - uses: phips28/gh-action-bump-version@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          version-type: ${{ github.event.inputs.version-type }}
