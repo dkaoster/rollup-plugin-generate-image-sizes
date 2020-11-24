@@ -1,7 +1,9 @@
 name: Bump Package Version
 
 on:
-  create: tags
+  push:
+    tags:
+      - '*'
 
 jobs:
   update-deps:
