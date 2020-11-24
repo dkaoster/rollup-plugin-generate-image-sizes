@@ -4,6 +4,11 @@
   "description": "Automatically generate image sizes for use in srcsets.",
   "main": "dist/rollup-generate-image-sizes.cjs.js",
   "jsnext:main": "dist/rollup-generate-image-sizes.es.js",
+  "files": [
+    "src",
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "clean": "rimraf dist",
     "build": "npm run clean && npm run build:cjs && npm run build:es",

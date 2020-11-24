@@ -1,4 +1,9 @@
+name: Publish to NPM
+
 on: push
+  push:
+    branches:
+      - master
 
 jobs:
   publish:
