@@ -21,4 +21,5 @@ jobs:
           GITHUB_REF: master
           GITHUB_HEAD_REF: master
         with:
-          skip-tag: 'true'
+          skip-tag: true
+          target-branch: master
