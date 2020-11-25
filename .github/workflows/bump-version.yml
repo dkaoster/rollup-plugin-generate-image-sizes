@@ -19,5 +19,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: master
+          GITHUB_HEAD_REF: master
         with:
           skip-tag: 'true'
