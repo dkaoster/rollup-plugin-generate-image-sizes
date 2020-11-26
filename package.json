@@ -22,6 +22,11 @@
   },
   "author": "Daniel Kao",
   "license": "MIT",
+  "keywords": [
+    "rollup",
+    "image",
+    "resize"
+  ],
   "bugs": {
     "url": "https://github.com/dkaoster/rollup-generate-image-sizes/issues"
   },
