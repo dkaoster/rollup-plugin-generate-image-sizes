@@ -1,49 +1,69 @@
-import { promises as fs } from 'fs';
 import globby from 'globby';
 import sharp from 'sharp';
 
 /**
  * Generate different image sizes on all images found within a directory,
- * based on the configuration given.
- *
- * @param options
- * @returns {{buildEnd(): void, name: string}}
+ * based on the configuration given. Uses sharp as the image processing module.
  */
 
-export default (options) => ({
-  name: 'generate-image-sizes',
-  // Runs on renderStart hook.
-  // First, get all the image files in the given directory
-  renderStart: () => globby(`${options.dir}/**/!(*@*|*#*).{jpg,jpeg,png}`)
-    .then((images) => Promise.allSettled(
-      // Map them into sharp objects
-      images.map((image) => {
-        const sharpObj = sharp(image);
+export default (options = {}) => {
+  // Load options
+  const {
+    hook = 'renderStart', // rollup hook
+    quality = 65, // image quality
+    dir = null, // directory string or strings
+    size = null, // image size or sizes
+    inputFormat = ['jpg', 'jpeg', 'png'], // image input formats
+    outputFormat = ['jpg'], // image output formats
+    forceUpscale = false, // whether or not we should forcibly upscale
+  } = options;
 
-        // Read the sharp metadata because we don't want to do stupid
-        // things like scale up (pointless)
-        return sharpObj.metadata()
-          .then((metadata) => Promise.allSettled(
-            options.sizes.map((scaleWidth) => {
-              // generate the output path
-              const imagePathSplit = image.split('.');
-              const imagePathPre = imagePathSplit.slice(0, -1).join('.');
-              const imagePathPost = imagePathSplit[imagePathSplit.length - 1];
-              const fileOut = `${imagePathPre}@${scaleWidth}w.${imagePathPost}`;
+  return {
+    name: 'generate-image-sizes',
+    // Runs on the hook specified, otherwise the renderStart hook.
+    // First, get all the image files in the given directory
+    [hook]: () => {
+      // If preconditions are not met, we just quit.
+      if (
+        !dir || dir.length === 0
+        || !size
+        || !inputFormat || inputFormat.length === 0
+        || !outputFormat || outputFormat.length === 0
+      ) { return Promise.resolve(); }
 
-              // If the width we want to scale to is larger than the original
-              // width, we return a relative symlink to the original file.
-              if (scaleWidth > metadata.width) {
-                const imagePath = image.split('/');
-                const relativePath = `./${imagePath[imagePath.length - 1]}`;
-                // TODO windows can't symlink
-                return fs.symlink(relativePath, fileOut);
-              }
+      return globby(
+        // Finds all the images we want based on dir and inputFormat
+        `{${Array.isArray(dir) ? dir.join(',') : dir}}/**/!(*@*|*#*).{${inputFormat.join(',')}}`,
+      )
+        .then((images) => Promise.allSettled(
+          // Map them into sharp objects
+          images.map((image) => {
+            const sharpObj = sharp(image);
 
-              // Output this image
-              return sharpObj.resize(scaleWidth).toFile(fileOut);
-            }).filter((p) => !!p),
-          ));
-      }),
-    )),
-});
+            // generate the output path
+            const imagePathSplit = image.split('.');
+            const imagePathPre = imagePathSplit.slice(0, -1).join('.');
+
+            // Read the sharp metadata so we know what the input width is.
+            return sharpObj.metadata()
+              .then((metadata) => Promise.allSettled(
+                (Array.isArray(size) ? size : [size]).map((scaleWidth) => {
+                  // If the width we want to scale to is larger than the original
+                  // width and forceUpscale is not set, we skip this.
+                  if (scaleWidth > metadata.width && !forceUpscale) return Promise.resolve();
+
+                  // Save all of the output images
+                  return Promise.all(
+                    (Array.isArray(outputFormat) ? outputFormat : [outputFormat])
+                      .map((format) => sharpObj
+                        .resize(scaleWidth)
+                        .toFormat(format, { quality })
+                        .toFile(`${imagePathPre}@${scaleWidth}w.${format}`)),
+                  );
+                }),
+              ));
+          }),
+        ));
+    },
+  };
+};

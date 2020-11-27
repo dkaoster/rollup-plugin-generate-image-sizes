@@ -18,11 +18,33 @@ export default {
   plugins: [
     genImageSizes({
       dir: 'static',
-      sizes: [1400, 1024, 640, 320],
+      size: [1400, 1024, 640, 320],
+      hook: 'renderStart',
+      quality: 65,
+      inputFormat: ['jpg', 'jpeg', 'png'],
+      outputFormat: ['jpg'],
+      forceUpscale: false,
     })
   ]
 }
 ```
+
+Note: All output files are named in the pattern `<original-filename>@<size>w.<file-extension>`. The plugin looks for the `@` symbol to determine which files have already been converted, which means that all files with the `@` will be ignored.
+
+### Configuration
+`dir` (required | `string` or `[string]`) the string or array of strings specifying the directory where the images we want to resize are.
+
+`size` (required | `int` or `[int]`) An integer or array of integers specifying the width in pixel of our output image.
+
+`hook` (default: renderStart) [the rollup hook](https://rollupjs.org/guide/en/#build-hooks) that this plugin should use.
+
+`quality` (default: 65 | `int`): The quality of output images, for image formats that have output quality controls.
+
+`inputFormat` (default: ['jpg', 'jpeg', 'png'] | `string` or `[string]`): The file extensions of the images we care about. Must be a format supported by [sharp](https://sharp.pixelplumbing.com/api-output#toformat).
+
+`outputFormat` (default: 'jpg' | `string` or `[string]`): The file extensions of the images we want to output. Must be a format supported by [sharp](https://sharp.pixelplumbing.com/api-output#toformat).
+
+`forceUpscale` (default: false | `boolean`): If the source image is larger, do we want to forcibly generate a scaled up version or whether we should just ignore it.
 
 ## License
 MIT
