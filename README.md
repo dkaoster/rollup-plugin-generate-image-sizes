@@ -29,7 +29,7 @@ export default {
 }
 ```
 
-Note: All output files are named in the pattern `<original-filename>@<size>w.<file-extension>`. The plugin looks for the `@` symbol to determine which files have already been converted, which means that all files with the `@` will be ignored.
+Note: All output files are named in the pattern `<original-filename>@<size>w.<file-extension>`. The plugin looks for the `@` symbol to determine which files have already been converted, which means that all files with the `@` will be ignored. Files with `#` are also ignored.
 
 ### Configuration
 `dir` (required | `string` or `[string]`) the string or array of strings specifying the directory where the images we want to resize are.

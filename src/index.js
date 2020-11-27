@@ -6,6 +6,9 @@ import sharp from 'sharp';
  * based on the configuration given. Uses sharp as the image processing module.
  */
 
+// A helper function for transform single items to array
+const arrayify = (a) => (Array.isArray(a) ? a : [a]);
+
 export default (options = {}) => {
   // Load options
   const {
@@ -31,9 +34,12 @@ export default (options = {}) => {
         || !outputFormat || outputFormat.length === 0
       ) { return Promise.resolve(); }
 
+      // Glob for the directories
+      const dirGlob = arrayify(dir).length > 1 ? `{${arrayify(dir).join(',')}}` : arrayify(dir)[0];
+
       return globby(
         // Finds all the images we want based on dir and inputFormat
-        `{${Array.isArray(dir) ? dir.join(',') : dir}}/**/!(*@*|*#*).{${inputFormat.join(',')}}`,
+        `${dirGlob}/**/!(*@*|*#*).{${inputFormat.join(',')}}`,
       )
         .then((images) => Promise.allSettled(
           // Map them into sharp objects
@@ -47,15 +53,16 @@ export default (options = {}) => {
             // Read the sharp metadata so we know what the input width is.
             return sharpObj.metadata()
               .then((metadata) => Promise.allSettled(
-                (Array.isArray(size) ? size : [size]).map((scaleWidth) => {
+                (arrayify(size)).map((scaleWidth) => {
                   // If the width we want to scale to is larger than the original
                   // width and forceUpscale is not set, we skip this.
                   if (scaleWidth > metadata.width && !forceUpscale) return Promise.resolve();
 
                   // Save all of the output images
                   return Promise.all(
-                    (Array.isArray(outputFormat) ? outputFormat : [outputFormat])
+                    (arrayify(outputFormat))
                       .map((format) => sharpObj
+                        .clone()
                         .resize(scaleWidth)
                         .toFormat(format, { quality })
                         .toFile(`${imagePathPre}@${scaleWidth}w.${format}`)),
