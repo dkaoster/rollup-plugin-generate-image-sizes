@@ -15,7 +15,7 @@ export default (options = {}) => {
     hook = 'renderStart', // rollup hook
     quality = 65, // image quality
     dir = null, // directory string or strings
-    size = null, // image size or sizes
+    size = [1400, 1024, 640, 320], // image size or sizes
     inputFormat = ['jpg', 'jpeg', 'png'], // image input formats
     outputFormat = ['jpg'], // image output formats
     forceUpscale = false, // whether or not we should forcibly upscale
@@ -49,6 +49,7 @@ export default (options = {}) => {
             // generate the output path
             const imagePathSplit = image.split('.');
             const imagePathPre = imagePathSplit.slice(0, -1).join('.');
+            const imageFormat = imagePathSplit[imagePathSplit.length - 1];
 
             // Read the sharp metadata so we know what the input width is.
             return sharpObj.metadata()
@@ -58,9 +59,18 @@ export default (options = {}) => {
                   // width and forceUpscale is not set, we skip this.
                   if (scaleWidth > metadata.width && !forceUpscale) return Promise.resolve();
 
+                  // Process output format list and dedup
+                  const outputFormats = Array.from(new Set(
+                    arrayify(outputFormat)
+                      // If format is match, we match to the input format
+                      .map((format) => (format === 'match' ? imageFormat : format))
+                      // If format is jpeg, we map to jpg
+                      .map((format) => (format === 'jpeg' ? 'jpg' : format)),
+                  ));
+
                   // Save all of the output images
                   return Promise.all(
-                    (arrayify(outputFormat))
+                    (outputFormats)
                       .map((format) => sharpObj
                         .clone()
                         .resize(scaleWidth)
