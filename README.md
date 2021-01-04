@@ -24,6 +24,7 @@ export default {
       inputFormat: ['jpg', 'jpeg', 'png'],
       outputFormat: ['jpg'],
       forceUpscale: false,
+      skipExisting: true,
     })
   ]
 }
@@ -45,6 +46,8 @@ Note: All output files are named in the pattern `<original-filename>@<size>w.<fi
 `outputFormat` (default: 'jpg' | `string` or `[string]`): The file extensions of the images we want to output. Must be a format supported by [sharp](https://sharp.pixelplumbing.com/api-output#toformat).
 
 `forceUpscale` (default: false | `boolean`): If the source image is larger, do we want to forcibly generate a scaled up version or whether we should just ignore it.
+
+`skipExisting` (default: true | `boolean`): whether we should skip existing images that have already been resized. a false value means that images will be regenerated and overwritten every single time this script is run.
 
 ## License
 MIT
