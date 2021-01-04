@@ -16,7 +16,7 @@ export default (options = {}) => {
     hook = 'renderStart', // rollup hook
     quality = 65, // image quality
     dir = null, // directory string or strings
-    size = null, // image size or sizes
+    size = [1400, 1024, 640, 320], // image size or sizes
     inputFormat = ['jpg', 'jpeg', 'png'], // image input formats
     outputFormat = ['jpg'], // image output formats
     forceUpscale = false, // whether or not we should forcibly upscale
@@ -38,7 +38,6 @@ export default (options = {}) => {
 
       // The sizes and formats that we will output to, arrayified.
       const sizes = arrayify(size);
-      const formats = arrayify(outputFormat);
 
       // Glob for the directories
       const dirGlob = arrayify(dir).length > 1 ? `{${arrayify(dir).join(',')}}` : arrayify(dir)[0];
@@ -53,6 +52,15 @@ export default (options = {}) => {
             // generate the output path
             const imagePathSplit = image.split('.');
             const imagePathPre = imagePathSplit.slice(0, -1).join('.');
+            const imageFormat = imagePathSplit[imagePathSplit.length - 1];
+
+            const formats = Array.from(new Set(
+              arrayify(outputFormat)
+                // If format is match, we match to the input format
+                .map((format) => (format === 'match' ? imageFormat : format))
+                // If format is jpeg, we map to jpg
+                .map((format) => (format === 'jpeg' ? 'jpg' : format)),
+            ));
 
             // An array of objects that contain sizes and formats of all our outputs.
             let outputs = sizes.reduce(

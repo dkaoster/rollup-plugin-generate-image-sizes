@@ -35,13 +35,13 @@ Note: All output files are named in the pattern `<original-filename>@<size>w.<fi
 ### Configuration
 `dir` (required | `string` or `[string]`) the string or array of strings specifying the directory where the images we want to resize are.
 
-`size` (required | `int` or `[int]`) An integer or array of integers specifying the width in pixel of our output image.
+`size` (default: [1400, 1024, 640, 320] | `int` or `[int]`) An integer or array of integers specifying the width in pixels of our output image.
 
 `hook` (default: renderStart) [the rollup hook](https://rollupjs.org/guide/en/#build-hooks) that this plugin should use.
 
 `quality` (default: 65 | `int`): The quality of output images, for image formats that have output quality controls.
 
-`inputFormat` (default: ['jpg', 'jpeg', 'png'] | `string` or `[string]`): The file extensions of the images we care about. Must be a format supported by [sharp](https://sharp.pixelplumbing.com/api-output#toformat).
+`inputFormat` (default: ['jpg', 'jpeg', 'png'] | `string` or `[string]`): The file extensions of the images we care about. Must be a format supported by [sharp](https://sharp.pixelplumbing.com/api-output#toformat), or `match`, which matches the input format of the image.
 
 `outputFormat` (default: 'jpg' | `string` or `[string]`): The file extensions of the images we want to output. Must be a format supported by [sharp](https://sharp.pixelplumbing.com/api-output#toformat).
 
