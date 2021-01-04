@@ -54,6 +54,7 @@ export default (options = {}) => {
             const imagePathPre = imagePathSplit.slice(0, -1).join('.');
             const imageFormat = imagePathSplit[imagePathSplit.length - 1];
 
+            // process image format options
             const formats = Array.from(new Set(
               arrayify(outputFormat)
                 // If format is match, we match to the input format
