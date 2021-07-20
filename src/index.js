@@ -1,10 +1,10 @@
 import fs from 'fs';
 import globby from 'globby';
-import sharp from 'sharp';
+import jimp from 'jimp';
 
 /**
  * Generate different image sizes on all images found within a directory,
- * based on the configuration given. Uses sharp as the image processing module.
+ * based on the configuration given. Uses jimp as the image processing module.
  */
 
 // A helper function for transform single items to array
@@ -47,7 +47,7 @@ export default (options = {}) => {
         `${dirGlob}/**/!(*@*|*#*).{${inputFormat.join(',')}}`,
       )
         .then((images) => Promise.allSettled(
-          // Map them into sharp objects
+          // Map them into jimp objects
           images.map((image) => {
             // generate the output path
             const imagePathSplit = image.split('.');
@@ -83,11 +83,8 @@ export default (options = {}) => {
             // ////////////////////////////////////////////
             // Everything below is expensive, so we want to short-circuit this as much as possible
             // load in the image
-            const sharpObj = sharp(image);
-
-            // Read the sharp metadata so we know what the input width is.
-            return sharpObj.metadata()
-              .then((metadata) => Promise.allSettled(
+            return jimp.read(image)
+              .then((err, jimpObj) => Promise.allSettled(
                 outputs
                   // Get only the sizes that we need to generate
                   .reduce((acc, val) => {
@@ -97,7 +94,9 @@ export default (options = {}) => {
                   .map((scaleWidth) => {
                     // If the width we want to scale to is larger than the original
                     // width and forceUpscale is not set, we skip this.
-                    if (scaleWidth > metadata.width && !forceUpscale) return Promise.resolve();
+                    if (scaleWidth > jimpObj.bitmap.width && !forceUpscale) {
+                      return Promise.resolve();
+                    }
 
                     // Save all of the output images
                     return Promise.all(
@@ -105,11 +104,11 @@ export default (options = {}) => {
                         // only get the outputs of the current width
                         .filter((d) => d.scaleWidth === scaleWidth)
                         .map((d) => d.format)
-                        .map((format) => sharpObj
+                        .map((format) => jimpObj
                           .clone()
-                          .resize(scaleWidth)
-                          .toFormat(format, { quality })
-                          .toFile(`${imagePathPre}@${scaleWidth}w.${format}`)),
+                          .resize(scaleWidth, jimp.AUTO)
+                          .quality(quality)
+                          .write(`${imagePathPre}@${scaleWidth}w.${format}`)),
                     );
                   }),
               ));
