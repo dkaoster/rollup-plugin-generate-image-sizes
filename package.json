@@ -34,7 +34,7 @@
   "homepage": "https://github.com/dkaoster/rollup-generate-image-sizes#readme",
   "dependencies": {
     "globby": "^11.0.1",
-    "sharp": "^0.28.3"
+    "jimp": "^0.16.1"
   },
   "devDependencies": {
     "eslint": "^7.14.0",

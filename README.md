@@ -41,9 +41,9 @@ Note: All output files are named in the pattern `<original-filename>@<size>w.<fi
 
 `quality` (default: 65 | `int`): The quality of output images, for image formats that have output quality controls.
 
-`inputFormat` (default: ['jpg', 'jpeg', 'png'] | `string` or `[string]`): The file extensions of the images we care about. Must be a format supported by [sharp](https://sharp.pixelplumbing.com/api-output#toformat), or `match`, which matches the input format of the image.
+`inputFormat` (default: ['jpg', 'jpeg', 'png'] | `string` or `[string]`): The file extensions of the images we care about. Must be a format supported by [jimp](https://github.com/oliver-moran/jimp#supported-image-types), or `match`, which matches the input format of the image.
 
-`outputFormat` (default: 'jpg' | `string` or `[string]`): The file extensions of the images we want to output. Must be a format supported by [sharp](https://sharp.pixelplumbing.com/api-output#toformat) or `match`, which is used to match the input format.
+`outputFormat` (default: 'jpg' | `string` or `[string]`): The file extensions of the images we want to output. Must be a format supported by [jimp](https://github.com/oliver-moran/jimp#supported-image-types) or `match`, which is used to match the input format.
 
 `forceUpscale` (default: false | `boolean`): If the source image is larger, do we want to forcibly generate a scaled up version or whether we should just ignore it.
 
