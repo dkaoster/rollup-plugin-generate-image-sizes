@@ -84,7 +84,7 @@ export default (options = {}) => {
             // Everything below is expensive, so we want to short-circuit this as much as possible
             // load in the image
             return jimp.read(image)
-              .then((err, jimpObj) => Promise.allSettled(
+              .then((jimpObj) => Promise.allSettled(
                 outputs
                   // Get only the sizes that we need to generate
                   .reduce((acc, val) => {
