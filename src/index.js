@@ -44,75 +44,77 @@ export default (options = {}) => {
 
       return globby(
         // Finds all the images we want based on dir and inputFormat
-        `${dirGlob}/**/!(*@*|*#*).{${inputFormat.join(',')}}`,
+        `${dirGlob}/**/*.{${inputFormat.join(',')}}`,
       )
         .then((images) => Promise.allSettled(
           // Map them into jimp objects
-          images.map((image) => {
+          images
+            .filter((d) => d.indexOf('@') < 0 && d.indexOf('#') < 0)
+            .map((image) => {
             // generate the output path
-            const imagePathSplit = image.split('.');
-            const imagePathPre = imagePathSplit.slice(0, -1).join('.');
-            const imageFormat = imagePathSplit[imagePathSplit.length - 1];
+              const imagePathSplit = image.split('.');
+              const imagePathPre = imagePathSplit.slice(0, -1).join('.');
+              const imageFormat = imagePathSplit[imagePathSplit.length - 1];
 
-            // process image format options
-            const formats = Array.from(new Set(
-              arrayify(outputFormat)
+              // process image format options
+              const formats = Array.from(new Set(
+                arrayify(outputFormat)
                 // If format is match, we match to the input format
-                .map((format) => (format === 'match' ? imageFormat : format))
+                  .map((format) => (format === 'match' ? imageFormat : format))
                 // If format is jpeg, we map to jpg
-                .map((format) => (format === 'jpeg' ? 'jpg' : format)),
-            ));
+                  .map((format) => (format === 'jpeg' ? 'jpg' : format)),
+              ));
 
-            // An array of objects that contain sizes and formats of all our outputs.
-            let outputs = sizes.reduce(
-              (acc, scaleWidth) => [...acc, ...formats.map((format) => ({ format, scaleWidth }))],
-              [],
-            );
-
-            // if skipExisting is set
-            if (skipExisting) {
-              // Filter out images that already exist
-              outputs = outputs.filter(
-                ({ format, scaleWidth }) => !fs.existsSync(`${imagePathPre}@${scaleWidth}w.${format}`),
+              // An array of objects that contain sizes and formats of all our outputs.
+              let outputs = sizes.reduce(
+                (acc, scaleWidth) => [...acc, ...formats.map((format) => ({ format, scaleWidth }))],
+                [],
               );
 
-              // if images already exist, we can skip this rest of this process
-              if (outputs.length === 0) return null;
-            }
+              // if skipExisting is set
+              if (skipExisting) {
+              // Filter out images that already exist
+                outputs = outputs.filter(
+                  ({ format, scaleWidth }) => !fs.existsSync(`${imagePathPre}@${scaleWidth}w.${format}`),
+                );
 
-            // ////////////////////////////////////////////
-            // Everything below is expensive, so we want to short-circuit this as much as possible
-            // load in the image
-            return jimp.read(image)
-              .then((jimpObj) => Promise.allSettled(
-                outputs
+                // if images already exist, we can skip this rest of this process
+                if (outputs.length === 0) return null;
+              }
+
+              // ////////////////////////////////////////////
+              // Everything below is expensive, so we want to short-circuit this as much as possible
+              // load in the image
+              return jimp.read(image)
+                .then((jimpObj) => Promise.allSettled(
+                  outputs
                   // Get only the sizes that we need to generate
-                  .reduce((acc, val) => {
-                    if (acc.indexOf(val.scaleWidth) < 0) return [...acc, val.scaleWidth];
-                    return acc;
-                  }, [])
-                  .map((scaleWidth) => {
+                    .reduce((acc, val) => {
+                      if (acc.indexOf(val.scaleWidth) < 0) return [...acc, val.scaleWidth];
+                      return acc;
+                    }, [])
+                    .map((scaleWidth) => {
                     // If the width we want to scale to is larger than the original
                     // width and forceUpscale is not set, we skip this.
-                    if (scaleWidth > jimpObj.bitmap.width && !forceUpscale) {
-                      return Promise.resolve();
-                    }
+                      if (scaleWidth > jimpObj.bitmap.width && !forceUpscale) {
+                        return Promise.resolve();
+                      }
 
-                    // Save all of the output images
-                    return Promise.all(
-                      outputs
+                      // Save all of the output images
+                      return Promise.all(
+                        outputs
                         // only get the outputs of the current width
-                        .filter((d) => d.scaleWidth === scaleWidth)
-                        .map((d) => d.format)
-                        .map((format) => jimpObj
-                          .clone()
-                          .resize(scaleWidth, jimp.AUTO)
-                          .quality(quality)
-                          .write(`${imagePathPre}@${scaleWidth}w.${format}`)),
-                    );
-                  }),
-              ));
-          }).filter((d) => !!d),
+                          .filter((d) => d.scaleWidth === scaleWidth)
+                          .map((d) => d.format)
+                          .map((format) => jimpObj
+                            .clone()
+                            .resize(scaleWidth, jimp.AUTO)
+                            .quality(quality)
+                            .write(`${imagePathPre}@${scaleWidth}w.${format}`)),
+                      );
+                    }),
+                ));
+            }).filter((d) => !!d),
         ));
     },
   };
