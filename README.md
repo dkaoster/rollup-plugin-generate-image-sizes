@@ -25,6 +25,7 @@ export default {
       outputFormat: ['jpg'],
       forceUpscale: false,
       skipExisting: true,
+      maxParallel: 4,
     })
   ]
 }
@@ -48,6 +49,8 @@ Note: All output files are named in the pattern `<original-filename>@<size>w.<fi
 `forceUpscale` (default: false | `boolean`): If the source image is larger, do we want to forcibly generate a scaled up version or whether we should just ignore it.
 
 `skipExisting` (default: true | `boolean`): whether we should skip existing images that have already been resized. a false value means that images will be regenerated and overwritten every single time this script is run.
+
+`maxParallel` (default: 4 | `int`): the max number of parallel images that can be processed concurrently.
 
 ## License
 MIT
