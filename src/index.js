@@ -56,7 +56,7 @@ export default (options = {}) => {
             // Map them into jimp objects
             images
               .filter((d) => d.indexOf('@') < 0 && d.indexOf('#') < 0)
-              .forEach((image) => {
+              .forEach((image, index, imageArray) => {
                 // generate the output path
                 const imagePathSplit = image.split('.');
                 const imagePathPre = imagePathSplit.slice(0, -1).join('.');
@@ -88,7 +88,12 @@ export default (options = {}) => {
                   );
 
                   // if images already exist, we can skip this rest of this process
-                  if (outputs.length === 0) return;
+                  if (outputs.length === 0) {
+                    // If every single file is skipped, we still need to resolve
+                    // so that promise-queue doesn't sit around waiting forever.
+                    if (index === imageArray.length - 1) q.add(() => Promise.resolve());
+                    return;
+                  }
                 }
 
                 // ////////////////////////////////////////////
