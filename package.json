@@ -1,9 +1,9 @@
 {
-  "name": "rollup-generate-image-sizes",
+  "name": "rollup-plugin-generate-image-sizes",
   "version": "0.0.15",
   "description": "Automatically generate image sizes for use in srcsets.",
-  "main": "dist/rollup-generate-image-sizes.cjs.js",
-  "jsnext:main": "dist/rollup-generate-image-sizes.es.js",
+  "main": "dist/rollup-plugin-generate-image-sizes.cjs.js",
+  "jsnext:main": "dist/rollup-plugin-generate-image-sizes.es.js",
   "files": [
     "src",
     "dist",
