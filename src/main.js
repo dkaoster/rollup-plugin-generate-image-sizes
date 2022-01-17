@@ -1,41 +1,7 @@
 import fs from 'fs';
 import globby from 'globby';
 import jimp from 'jimp';
-// @ts-ignore
 import Queue from 'promise-queue';
-
-/**
- * Generate different image sizes on all images found within a directory,
- * based on the configuration given. Uses jimp as the image processing module.
- */
-
-// Typescript declarations
-interface EmittedAsset {
-  type: 'asset';
-  name?: string;
-  fileName?: string;
-  source?: string | Uint8Array;
-}
-
-interface Options {
-  hook?: string,
-  quality?: number,
-  dir?: string | string[],
-  size?: number | number[],
-  inputFormat?: string | string[],
-  outputFormat?: string | string[],
-  forceUpscale?: boolean,
-  skipExisting?: boolean,
-  maxParallel?: number,
-  emitFile?: (asset: EmittedAsset) => string,
-}
-
-interface Output {
-  format: string,
-  scaleWidth: number,
-}
-
-// ////////////////////////////////////////////////////////////////////////////
 
 /**
  * A helper function for transform single items to array such that:
@@ -45,33 +11,30 @@ interface Output {
  *
  * @param a
  */
-export const arrayify = (a: any) => (Array.isArray(a) ? [...a] : [a]);
+export const arrayify = (a) => (Array.isArray(a) ? [...a] : [a]);
 
 /**
- *
+ * Generates the crops for this image and saves it to disk.
  *
  * @param image
  * @param outputs
  * @param quality
  * @param forceUpscale
  * @param imagePathPre
- * @param emitFile
+ * @param addGeneratedFile
  */
-export const generateCrops = (
-  image: string,
-  outputs: Output[],
-  imagePathPre: string,
-  { quality, forceUpscale, emitFile }: Options,
-) => jimp.read(image)
+export const generateCrops = ({
+  image, outputs, imagePathPre, quality, forceUpscale, addGeneratedFile,
+}) => () => jimp.read(image)
   .then((jimpObj) => Promise.allSettled(
     (outputs)
       // Get only the sizes that we need to generate
-      .reduce((acc: number[], val) => {
+      .reduce((acc, val) => {
         if (acc.indexOf(val.scaleWidth) < 0) return [...acc, val.scaleWidth];
         return acc;
       }, [])
-      .map((scaleWidth: number) => {
-        // If the width we want to scale to is larger than the original
+      .map((scaleWidth) => {
+        // If the target width is larger than the original
         // width and forceUpscale is not set, we skip this.
         if (scaleWidth > jimpObj.bitmap.width && !forceUpscale) {
           return Promise.resolve();
@@ -83,29 +46,36 @@ export const generateCrops = (
             // only get the outputs of the current width
             .filter((d) => d.scaleWidth === scaleWidth)
             .map((d) => d.format)
-            .map(
-              (format) => {
-                const fileName = `${imagePathPre}@${scaleWidth}w.${format}`;
-                // emitfile
-                if (typeof emitFile === 'function') emitFile({ type: 'asset', fileName });
+            .map((format) => {
+              // Add this file to the generated file list
+              addGeneratedFile(image, scaleWidth, format);
 
-                return jimpObj
-                  .clone()
-                  .resize(scaleWidth, jimp.AUTO)
-                  .quality(quality as number)
-                  .write(fileName);
-              },
-            ),
+              // Do the resize and save
+              return jimpObj
+                .clone()
+                .resize(scaleWidth, jimp.AUTO)
+                .quality(quality)
+                .write(`${imagePathPre}@${scaleWidth}w.${format}`);
+            }),
         );
       }),
   ));
 
-export const processImage = (
-  q: any,
-  {
-    size, skipExisting, outputFormat, quality, forceUpscale, emitFile,
-  }: Options,
-) => (image: string, index: number, imageArray: string[]) => {
+/**
+ * Processes this image, determining which crops and sizes we need to generate.
+ *
+ * @param queue
+ * @param size
+ * @param skipExisting
+ * @param outputFormat
+ * @param quality
+ * @param forceUpscale
+ * @param addGeneratedFile
+ * @returns {(function(*, *, *): void)|*}
+ */
+export const processImage = ({
+  queue, size, skipExisting, outputFormat, quality, forceUpscale, addGeneratedFile,
+}) => (image, index, imageArray) => {
   const sizes = arrayify(size);
 
   // generate the output path
@@ -122,7 +92,7 @@ export const processImage = (
       .map((format) => (format === 'jpeg' ? 'jpg' : format)),
   ));
 
-  // An array of objects that contain sizes and formats of all our outputs.
+  // An array of objects that contains sizes and formats of all our outputs.
   let outputs = sizes.reduce(
     (acc, scaleWidth) => [
       ...acc,
@@ -135,25 +105,37 @@ export const processImage = (
   if (skipExisting) {
     // Filter out images that already exist
     outputs = outputs.filter(
-      ({ format, scaleWidth }: Output) => !fs.existsSync(`${imagePathPre}@${scaleWidth}w.${format}`),
+      ({ format, scaleWidth }) => {
+        const cropExists = fs.existsSync(`${imagePathPre}@${scaleWidth}w.${format}`);
+        // If this image crop already exists, we add it to the generated image list anyway
+        if (cropExists) addGeneratedFile(image, scaleWidth, format);
+        return !cropExists;
+      },
     );
 
     // if images already exist, we can skip this rest of this process
     if (outputs.length === 0) {
       // If every single file is skipped, we still need to resolve
       // so that promise-queue doesn't sit around waiting forever.
-      if (index === imageArray.length - 1) q.add(() => Promise.resolve());
+      if (index === imageArray.length - 1) queue.add(() => Promise.resolve());
       return;
     }
   }
 
-  // ////////////////////////////////////////////
-  // Everything below is expensive, so short-circuit this as much as possible
   // load in the image
-  q.add(() => generateCrops(image, outputs, imagePathPre, { quality, forceUpscale, emitFile }));
+  queue.add(generateCrops({
+    image, outputs, imagePathPre, quality, forceUpscale, addGeneratedFile,
+  }));
 };
 
-export default (options: Options = {}) => {
+/**
+ * Generate different image sizes on all images found within a directory,
+ * based on the configuration given. Uses jimp as the image processing module.
+ *
+ * @param options
+ * @returns {Promise<unknown>|Promise<void>|{name: string}}
+ */
+export default (options) => {
   // Load options
   const {
     hook = 'renderStart', // rollup hook
@@ -165,16 +147,15 @@ export default (options: Options = {}) => {
     forceUpscale = false, // whether we should forcibly upscale
     skipExisting = true, // whether we should skip existing images that have already been resized
     maxParallel = 4, // the max number of parallel images that can be processed concurrently
+    outputManifest = null, // The path to output a manifest of all generated images
   } = options;
-
-  // @ts-ignore
-  const { emitFile } = this;
 
   return {
     name: 'generate-image-sizes',
+
     // Runs on the hook specified, otherwise the renderStart hook.
     // First, get all the image files in the given directory
-    [hook]: () => {
+    [hook]() {
       // If preconditions are not met, we just quit.
       if (
         !dir || dir.length === 0
@@ -189,9 +170,20 @@ export default (options: Options = {}) => {
       // Glob for the directories
       const dirGlob = arrayify(dir).length > 1 ? `{${arrayify(dir).join(',')}}` : arrayify(dir)[0];
 
+      // An array that contains all the images we've generated (or already exist)
+      let generatedFiles = [];
+      const addGeneratedFile = (image, width, format) => {
+        generatedFiles = [...generatedFiles, { image, width, format }];
+      };
+
       return new Promise((resolve) => {
         // Promise queue so that we only process maxParallel parallel files at a time
-        const q = new Queue(maxParallel, Infinity, { onEmpty: () => resolve(null) });
+        const q = new Queue(maxParallel, Infinity, {
+          onEmpty: () => {
+            if (outputManifest) fs.writeFileSync(outputManifest, JSON.stringify(generatedFiles));
+            return resolve();
+          },
+        });
 
         // Finds all the images we want based on dir and inputFormat
         globby(`${dirGlob}/**/*.{${inputFormats.join(',')}}`)
@@ -199,8 +191,8 @@ export default (options: Options = {}) => {
             // Map them into jimp objects
             images
               .filter((d) => d.indexOf('@') < 0 && d.indexOf('#') < 0)
-              .forEach(processImage(q, {
-                size, skipExisting, outputFormat, quality, forceUpscale, emitFile,
+              .forEach(processImage({
+                queue: q, size, skipExisting, outputFormat, quality, forceUpscale, addGeneratedFile,
               }));
           });
       });
