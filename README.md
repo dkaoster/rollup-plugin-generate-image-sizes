@@ -12,11 +12,11 @@ npm i -D rollup-plugin-generate-image-sizes
 
 ```js 
 // rollup.config.js
-import genImageSizes from 'rollup-plugin-generate-image-sizes';
+import { generateImageSizes } from 'rollup-plugin-generate-image-sizes';
 
 export default {
   plugins: [
-    genImageSizes({
+    generateImageSizes({
       dir: 'static',
       size: [1400, 1024, 640, 320],
       hook: 'renderStart',
