@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "test": "npm run build && mocha",
-    "lint": "eslint .",
+    "lint": "npm run build && eslint .",
     "clean": "rimraf dist",
     "build": "npm run clean && rollup -c",
     "prepublishOnly": "npm run build"
