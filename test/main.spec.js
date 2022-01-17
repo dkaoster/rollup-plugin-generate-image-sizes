@@ -33,7 +33,7 @@ describe('Test generateCrops', () => {
     generatedFiles = [];
     globby('./test/**/*@*').then((images) => {
       images.forEach((image) => { fs.unlinkSync(image); });
-      done();
+      setTimeout(done, 200);
     });
   };
 
@@ -150,6 +150,7 @@ describe('Test generateCrops', () => {
   generateCropTests.forEach(({ label, options, expected }) => {
     it(label, async () => {
       await generateCrops(options)();
+      await new Promise((resolve) => { setTimeout(resolve, 300); });
       expected();
     });
   });
@@ -166,7 +167,7 @@ describe('Test processImage', () => {
     generatedFiles = [];
     globby('./test/**/*@*').then((images) => {
       images.forEach((image) => { fs.unlinkSync(image); });
-      done();
+      setTimeout(done, 200);
     });
   };
 
@@ -204,9 +205,10 @@ describe('Test processImage', () => {
         quality: 50,
         forceUpscale: false,
         addGeneratedFile: () => {},
-      })().then(() => {
-        expect(fs.existsSync('./test/test-image@400w.jpg')).to.equal(true);
-      }),
+      })().then(() => new Promise((resolve) => { setTimeout(resolve, 300); }))
+        .then(() => {
+          expect(fs.existsSync('./test/test-image@400w.jpg')).to.equal(true);
+        }),
       options: {
         queue,
         size: 400,
@@ -231,9 +233,10 @@ describe('Test processImage', () => {
         quality: 50,
         forceUpscale: true,
         addGeneratedFile: () => {},
-      })().then(() => {
-        expect(fs.existsSync('./test/test-image@800w.jpg')).to.equal(true);
-      }),
+      })().then(() => new Promise((resolve) => { setTimeout(resolve, 300); }))
+        .then(() => {
+          expect(fs.existsSync('./test/test-image@800w.jpg')).to.equal(true);
+        }),
       options: {
         queue,
         size: [400, 800],
@@ -261,6 +264,7 @@ describe('Test processImage', () => {
     it(label, async () => {
       if (typeof before === 'function') await before();
       processImage(options)(...imageProps);
+      await new Promise((resolve) => { setTimeout(resolve, 300); });
       expected();
     });
   });
