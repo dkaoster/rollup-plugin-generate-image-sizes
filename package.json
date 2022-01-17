@@ -1,6 +1,6 @@
 {
   "name": "rollup-plugin-generate-image-sizes",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "Automatically generate image sizes for use in srcsets.",
   "main": "dist/rollup-plugin-generate-image-sizes.js",
   "files": [
