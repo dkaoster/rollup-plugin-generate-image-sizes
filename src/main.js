@@ -135,7 +135,7 @@ export const processImage = ({
  * @param options
  * @returns {Promise<unknown>|Promise<void>|{name: string}}
  */
-export default (options) => {
+export const generateImageSizes = (options) => {
   // Load options
   const {
     hook = 'renderStart', // rollup hook
