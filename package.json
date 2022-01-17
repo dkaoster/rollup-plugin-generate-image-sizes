@@ -2,19 +2,17 @@
   "name": "rollup-plugin-generate-image-sizes",
   "version": "0.0.17",
   "description": "Automatically generate image sizes for use in srcsets.",
-  "main": "dist/rollup-plugin-generate-image-sizes.cjs.js",
-  "jsnext:main": "dist/rollup-plugin-generate-image-sizes.es.js",
+  "main": "dist/rollup-plugin-generate-image-sizes.js",
   "files": [
     "src",
     "dist",
     "README.md"
   ],
   "scripts": {
-    "lint": "eslint .",
+    "test": "npm run build && mocha",
+    "lint": "npm run build && eslint .",
     "clean": "rimraf dist",
-    "build": "npm run clean && npm run build:cjs && npm run build:es",
-    "build:cjs": "rollup -c -o dist/rollup-plugin-generate-image-sizes.cjs.js -f cjs",
-    "build:es": "rollup -c -o dist/rollup-plugin-generate-image-sizes.es.js -f es",
+    "build": "npm run clean && rollup -c",
     "prepublishOnly": "npm run build"
   },
   "repository": {
@@ -38,10 +36,12 @@
     "promise-queue": "^2.2.5"
   },
   "devDependencies": {
+    "chai": "^4.3.4",
     "eslint": "^7.14.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1",
+    "mocha": "^9.1.4",
     "rimraf": "^3.0.2",
-    "rollup": "^2.33.3"
+    "rollup": "^2.64.0"
   }
 }

@@ -26,6 +26,7 @@ export default {
       forceUpscale: false,
       skipExisting: true,
       maxParallel: 4,
+      outputManifest: 'static/images-manifest.json'
     })
   ]
 }
@@ -51,6 +52,8 @@ Note: All output files are named in the pattern `<original-filename>@<size>w.<fi
 `skipExisting` (default: true | `boolean`): whether we should skip existing images that have already been resized. a false value means that images will be regenerated and overwritten every single time this script is run.
 
 `maxParallel` (default: 4 | `int`): the max number of parallel images that can be processed concurrently.
+
+`outputManifest` (default: null | `string`): the file to output a json containing all the images this plugin generated.
 
 ## License
 MIT
