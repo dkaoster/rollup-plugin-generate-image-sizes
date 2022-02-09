@@ -188,6 +188,9 @@ export const generateImageSizes = (options) => {
         // Finds all the images we want based on dir and inputFormat
         globby(`${dirGlob}/**/*.{${inputFormats.join(',')}}`)
           .then((images) => {
+            // If no images were provided, resolve the queue.
+            if (images.length === 0) q.add(() => Promise.resolve());
+
             // Map them into jimp objects
             images
               .filter((d) => d.indexOf('@') < 0 && d.indexOf('#') < 0)
