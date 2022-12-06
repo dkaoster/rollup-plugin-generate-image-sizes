@@ -3,6 +3,13 @@ import globby from 'globby';
 import jimp from 'jimp';
 import Queue from 'promise-queue';
 
+// Increasing the memory limit for jpegs
+const cachedJpegDecoder = jimp.decoders['image/jpeg'];
+jimp.decoders['image/jpeg'] = (data) => {
+  const userOpts = { maxMemoryUsageInMB: 1024 };
+  return cachedJpegDecoder(data, userOpts);
+};
+
 /**
  * A helper function for transform single items to array such that:
  * [a] => [a]
